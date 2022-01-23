@@ -5,7 +5,15 @@ import random as rng
 rng.seed(12345)
 
 
-def get4Contours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, draw=False):
+def getBaseContours(img, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
+    return getImageContours(img, 4, cThr=[30, 10], showCanny=False, minArea=2000, draw=False)
+
+
+def getBoxContours(img, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
+    return getImageContours(img, 6, cThr=[30, 10], showCanny=False, minArea=2000, draw=False)
+
+
+def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 1)
     imgCanny = cv2.Canny(imgBlur, cThr[0], cThr[1])
@@ -44,43 +52,37 @@ def get4Contours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, dr
     cont = cv2.approxPolyDP(cont, .01 * cnt_len, True)
     hull = cv2.convexHull(cont)
     # higlight points
-    extremePoints = mark_points(hull, img, 4)
-    uni_hull = [hull]
-    cv2.drawContours(img, uni_hull, -1, 255, 2);
-    cv2.imshow('united contours', img)
-    cv2.waitKey(0)
 
-    #finalContours = sorted(finalContours, key=lambda x: x[1], reverse=True)
-    return extremePoints
+    hull = filterPoints(hull, qPoints)
+
+    uni_hull = [hull]
+    if draw:
+        cv2.drawContours(img, uni_hull, -1, 255, 2);
+        cv2.imshow('united contours', img)
+        cv2.waitKey(0)
+
+    return hull
 
 
 def mark_points(hull, image, q):
     """plots circles of diggerent sizes and colors around points for visual examination,
     if points are ovelaping it will be reviled by different size of circels in the same place"""
-    points, _, _ = hull.shape
-
-    if points > q:
-        hull = filterPoints(hull, q)
-
     for i in range(q):
         r = int(np.random.randint(100, 255, 1)[0])
         g = int(np.random.randint(100, 255, 1)[0])
         b = int(np.random.randint(100, 255, 1)[0])
 
         cv2.circle(image, (hull[i][0][0], hull[i][0][1]), np.random.randint(10, 20, 1)[0], (r, g, b), 2)
-    return points
+    return image
 
 
 def filterPoints(hullPoints, q):
     points, dim1, dim2 = hullPoints.shape
-    print(dim1, dim2)
-    myPoints = hullPoints.reshape((points, dim2))
-    diffPoints = reorder4Points(myPoints)
-    #myPoints = myPoints[myPoints[:, 1].argsort()]
 
-    #for i in range(points):
-    #    print(i, myPoints[i])
-    hullPoints = diffPoints.reshape(q, dim1, dim2)
+    if points > q:
+        myPoints = hullPoints.reshape((points, dim2))
+        diffPoints = reorder4Points(myPoints)
+        hullPoints = diffPoints.reshape(q, dim1, dim2)
     return hullPoints
 
 

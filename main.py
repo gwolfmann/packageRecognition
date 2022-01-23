@@ -9,7 +9,7 @@ web_cam = False
 image1 = './images/toma7_1.png' ##1200*901
 image2 = './images/toma7_2.png' ##1200*901
 image3 = './images/toma7_3.png' ##1200*901
-image3 = './images/toma6_2.png'
+image3 = './images/toma7_2.png'
 cap = cv2.VideoCapture(0)
 cap.set(10, 160)
 cap.set(3, 1920)
@@ -181,15 +181,23 @@ def blue_yellow_image(image):
     return filter_image_or(image, lower_blue, upper_blue, lower_yel, upper_yel)
 
 
-def blue_corners(image):
-    res1 = blue_image(image)
-    cv2.imshow('Original_blue', res1)
-    res2 = yellow_image(image)
-    cv2.imshow('Original_yellow', res2)
-    res3 = blue_yellow_image(image)
-    cv2.imshow('Original_by', res3)
+def get_corners(image):
+    resBlue = blue_image(image)
+    #cv2.imshow('Original_blue', resBlue)
+    resYell = yellow_image(image)
+    #cv2.imshow('Original_yellow', resYell)
+    img = cv2.imread(image)
+    img = cv2.resize(img, (0, 0), None, 0.5, 0.5)
+    cv2.imshow('Original', img)
     cv2.waitKey(0)
-    finals = utils.get4Contours(res1, minArea=20000, filter=4, showCanny=True)
+    basePoints = utils.getBaseContours(resBlue, minArea=20000, showCanny=False)
+    boxPoints = utils.getBoxContours(resYell, minArea=20000, showCanny=False)
+    resBoth = blue_yellow_image(image)
+    completeImg = utils.mark_points(basePoints, resBoth, 4)
+    completeImg = utils.mark_points(boxPoints, completeImg, 6)
+    cv2.imshow('Original_doted', completeImg)
+    cv2.waitKey(0)
+
 
 
 # Press the green button in the gutter to run the script.
@@ -197,6 +205,6 @@ if __name__ == '__main__':
     print_hi('PyCharm')
     #show_image()
     #originalSizing()
-    blue_corners(image3)
+    get_corners(image3)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
