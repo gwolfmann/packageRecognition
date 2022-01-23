@@ -9,7 +9,7 @@ web_cam = False
 image1 = './images/toma7_1.png' ##1200*901
 image2 = './images/toma7_2.png' ##1200*901
 image3 = './images/toma7_3.png' ##1200*901
-image3 = './images/toma7_2.png'
+image3 = './images/toma7_1.png'
 cap = cv2.VideoCapture(0)
 cap.set(10, 160)
 cap.set(3, 1920)
