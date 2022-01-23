@@ -9,7 +9,7 @@ web_cam = False
 image1 = './images/toma7_1.png' ##1200*901
 image2 = './images/toma7_2.png' ##1200*901
 image3 = './images/toma7_3.png' ##1200*901
-image3 = './images/toma5_1.png'
+image3 = './images/toma6_2.png'
 cap = cv2.VideoCapture(0)
 cap.set(10, 160)
 cap.set(3, 1920)
@@ -188,8 +188,6 @@ def blue_corners(image):
     cv2.imshow('Original_yellow', res2)
     res3 = blue_yellow_image(image)
     cv2.imshow('Original_by', res3)
-    res4 = cv2.absdiff(res3,res2)
-    cv2.imshow('diff', res4)
     cv2.waitKey(0)
     finals = utils.get4Contours(res1, minArea=20000, filter=4, showCanny=True)
 

@@ -44,14 +44,14 @@ def get4Contours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, dr
     cont = cv2.approxPolyDP(cont, .01 * cnt_len, True)
     hull = cv2.convexHull(cont)
     # higlight points
-    mark_points(hull, img, 4)
+    extremePoints = mark_points(hull, img, 4)
     uni_hull = [hull]
     cv2.drawContours(img, uni_hull, -1, 255, 2);
     cv2.imshow('united contours', img)
     cv2.waitKey(0)
 
-    finalContours = sorted(finalContours, key=lambda x: x[1], reverse=True)
-    return finalContours
+    #finalContours = sorted(finalContours, key=lambda x: x[1], reverse=True)
+    return extremePoints
 
 
 def mark_points(hull, image, q):
@@ -60,7 +60,7 @@ def mark_points(hull, image, q):
     points, _, _ = hull.shape
 
     if points > q:
-        filterPoints(hull, q)
+        hull = filterPoints(hull, q)
 
     for i in range(q):
         r = int(np.random.randint(100, 255, 1)[0])
@@ -68,19 +68,21 @@ def mark_points(hull, image, q):
         b = int(np.random.randint(100, 255, 1)[0])
 
         cv2.circle(image, (hull[i][0][0], hull[i][0][1]), np.random.randint(10, 20, 1)[0], (r, g, b), 2)
+    return points
 
 
 def filterPoints(hullPoints, q):
     points, dim1, dim2 = hullPoints.shape
-    print(dim1,dim2)
+    print(dim1, dim2)
     myPoints = hullPoints.reshape((points, dim2))
-    myPoints = myPoints[myPoints[:,1].argsort()]
-    for i in range(points):
-        print(i, myPoints[i])
-    hullPoints = myPoints.reshape(points,dim1,dim2)
-    for i in range(points):
-        print(i, hullPoints[i])
+    diffPoints = reorder4Points(myPoints)
+    #myPoints = myPoints[myPoints[:, 1].argsort()]
+
+    #for i in range(points):
+    #    print(i, myPoints[i])
+    hullPoints = diffPoints.reshape(q, dim1, dim2)
     return hullPoints
+
 
 def getContours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, draw=False):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -123,6 +125,19 @@ def getContours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, dra
         cv2.waitKey(0)
 
     return img, finalContours
+
+
+def reorder4Points(myPoints):
+    # print(myPoints.shape)
+    myPointsNew = np.zeros_like(myPoints[0:4])
+    #myPoints = myPoints.reshape((4, 2))
+    add = myPoints.sum(1)
+    myPointsNew[0] = myPoints[np.argmin(add)]
+    myPointsNew[3] = myPoints[np.argmax(add)]
+    diff = np.diff(myPoints, axis=1)
+    myPointsNew[1] = myPoints[np.argmin(diff)]
+    myPointsNew[2] = myPoints[np.argmax(diff)]
+    return myPointsNew
 
 
 def reorder(myPoints):
