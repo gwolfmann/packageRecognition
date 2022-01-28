@@ -67,7 +67,8 @@ def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000,
 def mark_points(hull, image, q):
     """plots circles of diggerent sizes and colors around points for visual examination,
     if points are ovelaping it will be reviled by different size of circels in the same place"""
-    for i in range(q):
+    points = min(q,len(hull))
+    for i in range(points):
         r = int(np.random.randint(100, 255, 1)[0])
         g = int(np.random.randint(100, 255, 1)[0])
         b = int(np.random.randint(100, 255, 1)[0])
@@ -81,7 +82,7 @@ def filterPoints(hullPoints, q):
 
     if points > q:
         myPoints = hullPoints.reshape((points, dim2))
-        diffPoints = reorder4Points(myPoints)
+        diffPoints = reorderPoints(myPoints, q)
         hullPoints = diffPoints.reshape(q, dim1, dim2)
     return hullPoints
 
@@ -129,6 +130,13 @@ def getContours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, dra
     return img, finalContours
 
 
+def reorderPoints(myPoints, q):
+    if q == 4:
+        return reorder4Points(myPoints)
+    else:
+        return reorder6Points(myPoints)
+
+
 def reorder4Points(myPoints):
     # print(myPoints.shape)
     myPointsNew = np.zeros_like(myPoints[0:4])
@@ -139,6 +147,39 @@ def reorder4Points(myPoints):
     diff = np.diff(myPoints, axis=1)
     myPointsNew[1] = myPoints[np.argmin(diff)]
     myPointsNew[2] = myPoints[np.argmax(diff)]
+    return myPointsNew
+
+
+def reorder6Points(myPoints):
+    # print(myPoints.shape)
+    myPointsNew = np.zeros_like(myPoints[0:6])
+    #tomo los 3 mayores y los 3 menores
+    tmppos = [0,0]
+    tmpval = [0,0]
+    add = myPoints.sum(1)
+    maxs = np.argmax(add)
+    mins = np.argmin(add)
+    myPointsNew[0] = myPoints[mins]
+    tmppos[0] = mins
+    tmpval[0] = add[mins]
+    add[mins] = 100000
+    mins = np.argmin(add)
+    myPointsNew[1] = myPoints[mins]
+    tmppos[1] = mins
+    tmpval[1] = add[mins]
+    add[mins] = 100000
+    mins = np.argmin(add)
+    myPointsNew[2] = myPoints[mins]
+    add[tmppos[0]] = tmpval[0]
+    add[tmppos[1]] = tmpval[1]
+
+    myPointsNew[5] = myPoints[maxs]
+    add[maxs] = 0
+    maxs = np.argmax(add)
+    myPointsNew[4] = myPoints[maxs]
+    add[maxs] = 0
+    maxs = np.argmax(add)
+    myPointsNew[3] = myPoints[maxs]
     return myPointsNew
 
 
@@ -162,7 +203,7 @@ def warpImg(img, points, w, h, pad=20):
     pts2 = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
     imgWarp = cv2.warpPerspective(img, matrix, (w, h))
-    imgWarp = imgWarp[pad:imgWarp.shape[0] - pad, pad:imgWarp.shape[1] - pad]
+#    imgWarp = imgWarp[pad:imgWarp.shape[0] - pad, pad:imgWarp.shape[1] - pad]
     return imgWarp
 
 

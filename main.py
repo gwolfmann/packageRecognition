@@ -1,4 +1,5 @@
 import cv2
+import numpy
 import numpy as np
 
 import utils
@@ -9,14 +10,14 @@ web_cam = False
 image1 = './images/toma7_1.png' ##1200*901
 image2 = './images/toma7_2.png' ##1200*901
 image3 = './images/toma7_3.png' ##1200*901
-image3 = './images/toma7_2.png'
+image3 = './images/toma12_2.jpg'
 cap = cv2.VideoCapture(0)
 cap.set(10, 160)
 cap.set(3, 1920)
 cap.set(4, 1080)
 scale = 1
-wP = 1000 * scale # el original fue 210 * scale
-hP = 1000 * scale # 297 * scale
+wP = 1500 * scale # el original fue 210 * scale
+hP = 2250 * scale # 297 * scale
 ########
 
 # Press Shift+F10 to execute it or replace it with your code.
@@ -57,13 +58,13 @@ def show_image():
     hsv = cv2.cvtColor(img1, cv2.COLOR_BGR2HSV)
 
     ## create a mask for green colour using inRange function
-    #ymask = cv2.inRange(hsv, lower_yel, upper_yel)
+    ymask = cv2.inRange(hsv, lower_yel, upper_yel)
     #rmask = cv2.inRange(hsv, lower_red, upper_red)
     ##mask = cv2.bitwise_or(ymask, rmask)
-    #mask = ymask
+    mask = ymask
 
     #cv2.imshow('yell_mask', mask)
-    #res1 = cv2.bitwise_and(img1, img1, mask=mask)
+    res1 = cv2.bitwise_and(img1, img1, mask=mask)
     #cv2.imshow('Original_yel1', res1)
 
     hsv = cv2.cvtColor(img1, cv2.COLOR_BGR2HSV)
@@ -147,18 +148,20 @@ def originalSizing():
     cv2.waitKey(0)
 
 
-def filter_image(image, lower_mask, upper_mask):
-    img = cv2.imread(image)
+def filter_image(img, lower_mask, upper_mask):
+    if type(img) != numpy.ndarray:
+        img = cv2.imread(img)
     img = cv2.resize(img, (0, 0), None, 0.5, 0.5)
-
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     fmask = cv2.inRange(hsv, lower_mask, upper_mask)
     res1 = cv2.bitwise_and(img, img, mask=fmask)
     return res1
 
 
-def filter_image_or(image, lower_mask1, upper_mask1, lower_mask2, upper_mask2):
-    img = cv2.imread(image)
+def filter_image_or(img, lower_mask1, upper_mask1, lower_mask2, upper_mask2):
+    if type(img) != numpy.ndarray:
+        img = cv2.imread(img)
+
     img = cv2.resize(img, (0, 0), None, 0.5, 0.5)
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -191,13 +194,26 @@ def get_corners(image):
     cv2.imshow('Original', img)
     cv2.waitKey(0)
     basePoints = utils.getBaseContours(resBlue, minArea=20000, showCanny=False)
+
+    imgWrp = utils.warpImg(img, basePoints, wP, hP, 20)
+    imgWrp = cv2.resize(imgWrp, (0, 0), None, 0.3, 0.3)
+    #cv2.imshow('warped', imgWrp)
+    #cv2.waitKey(0)
+
+    resYell = yellow_image(imgWrp)
     boxPoints = utils.getBoxContours(resYell, minArea=20000, showCanny=False)
-    resBoth = blue_yellow_image(image)
-    completeImg = utils.mark_points(basePoints, resBoth, 4)
-    completeImg = utils.mark_points(boxPoints, completeImg, 6)
-    cv2.imshow('Original_doted', completeImg)
+    resBoth = blue_yellow_image(imgWrp)
+    completeImg = utils.mark_points(boxPoints, resBoth, len(boxPoints))
+    cv2.imshow('Warped_doted', completeImg)
     cv2.waitKey(0)
 
+
+def makeTriFiles(root,seq):
+    trio = ["", "", ""]
+    for i in range(3):
+        file = f"{seq}_{i+1}.jpg" #= './images/toma12_2.jpg'
+        trio[i] = root + file
+    return trio
 
 
 # Press the green button in the gutter to run the script.
@@ -205,6 +221,9 @@ if __name__ == '__main__':
     print_hi('PyCharm')
     #show_image()
     #originalSizing()
-    get_corners(image3)
+    #get_corners(image3)
+    trio = makeTriFiles('./images/toma', 12)
+    for f in trio:
+        get_corners(f)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
