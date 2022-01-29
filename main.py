@@ -185,25 +185,40 @@ def blue_yellow_image(image):
 
 
 def get_corners(image):
+    resizeFactor = 0.5
     resBlue = blue_image(image)
     #cv2.imshow('Original_blue', resBlue)
     resYell = yellow_image(image)
     #cv2.imshow('Original_yellow', resYell)
     img = cv2.imread(image)
-    img = cv2.resize(img, (0, 0), None, 0.5, 0.5)
+    img = cv2.resize(img, (0, 0), None, resizeFactor, resizeFactor)
     cv2.imshow('Original', img)
     cv2.waitKey(0)
-    basePoints = utils.getBaseContours(resBlue, minArea=20000, showCanny=False)
+    basePoints, _ = utils.getBaseContours(resBlue, minArea=20000, showCanny=False)
 
     imgWrp = utils.warpImg(img, basePoints, wP, hP, 20)
-    imgWrp = cv2.resize(imgWrp, (0, 0), None, 0.3, 0.3)
-    #cv2.imshow('warped', imgWrp)
-    #cv2.waitKey(0)
+    #imgWrp = cv2.resize(imgWrp, (0, 0), None, resizeFactor, resizeFactor)
 
     resYell = yellow_image(imgWrp)
-    boxPoints = utils.getBoxContours(resYell, minArea=20000, showCanny=False)
+    boxPoints, contsBox = utils.getBoxContours(resYell, minArea=20000, showCanny=False, draw=True)
     resBoth = blue_yellow_image(imgWrp)
     completeImg = utils.mark_points(boxPoints, resBoth, len(boxPoints))
+    pairOfPoints = utils.pairPoints(boxPoints)
+
+    for pointsPair in pairOfPoints:
+        point1 = pointsPair[0]
+        point2 = pointsPair[1]
+        dist = round(utils.findDis(point1, point2) * resizeFactor, 1)
+
+#           ancho = round((utils.findDis(nPoints[0][0] // scale, nPoints[1][0] // scale) / 10), 1)
+#           alto = round((utils.findDis(nPoints[0][0] // scale, nPoints[2][0] // scale) / 10), 1)
+        cv2.arrowedLine(completeImg, (point1[0][0], point1[0][1]), (point2[0][0], point2[0][1]),
+                        (255, 0, 255), 3, 8, 0, 0.05)
+        cv2.putText(completeImg, '{}cm'.format(dist), (point1[0][0] + 30, point1[0][1] - 10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5,
+                    (255, 0, 255), 2)
+#           cv2.arrowedLine(imgWrp, (nPoints[0][0][0], nPoints[0][0][1]), (nPoints[2][0][0], nPoints[2][0][1]),
+#                           (255, 0, 255), 3, 8, 0, 0.05)
+#           x, y, w, h = fig[3]
     cv2.imshow('Warped_doted', completeImg)
     cv2.waitKey(0)
 
@@ -222,7 +237,7 @@ if __name__ == '__main__':
     #show_image()
     #originalSizing()
     #get_corners(image3)
-    trio = makeTriFiles('./images/toma', 12)
+    trio = makeTriFiles('./images/toma', 11)
     for f in trio:
         get_corners(f)
 

@@ -6,11 +6,11 @@ rng.seed(12345)
 
 
 def getBaseContours(img, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
-    return getImageContours(img, 4, cThr=[30, 10], showCanny=False, minArea=2000, draw=False)
+    return getImageContours(img, 4, cThr, showCanny, minArea, draw)
 
 
 def getBoxContours(img, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
-    return getImageContours(img, 6, cThr=[30, 10], showCanny=False, minArea=2000, draw=False)
+    return getImageContours(img, 6, cThr, showCanny, minArea, draw)
 
 
 def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
@@ -36,6 +36,7 @@ def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000,
         finalContours.append([len(approx), area, approx, bbox, i])
         hull = cv2.convexHull(i)
         hull_list.append(hull)
+    finalContours = sorted(finalContours, key=lambda x: x[1], reverse=True)
 #    for con in finalContours:
 #        cv2.drawContours(img, con[4], -1, (0, 0, 255), 3)
 
@@ -61,7 +62,7 @@ def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000,
         cv2.imshow('united contours', img)
         cv2.waitKey(0)
 
-    return hull
+    return hull, finalContours
 
 
 def mark_points(hull, image, q):
@@ -203,9 +204,15 @@ def warpImg(img, points, w, h, pad=20):
     pts2 = np.float32([[0, 0], [w, 0], [0, h], [w, h]])
     matrix = cv2.getPerspectiveTransform(pts1, pts2)
     imgWarp = cv2.warpPerspective(img, matrix, (w, h))
-#    imgWarp = imgWarp[pad:imgWarp.shape[0] - pad, pad:imgWarp.shape[1] - pad]
     return imgWarp
 
 
 def findDis(pts1, pts2):
-    return ((pts2[0] - pts1[0]) ** 2 + (pts2[1] - pts1[1]) ** 2) ** 0.5
+    return ((pts2[0][0] - pts1[0][0]) ** 2 + (pts2[0][1] - pts1[0][1]) ** 2) ** 0.5
+
+
+def pairPoints(arrPoints):
+    retArra = [((arrPoints[i]), (arrPoints[i + 1]))
+         for i in range(len(arrPoints)-1)]
+    dim1 = len(retArra)
+    return retArra
