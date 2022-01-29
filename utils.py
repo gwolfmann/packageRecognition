@@ -212,7 +212,7 @@ def findDis(pts1, pts2):
 
 
 def pairPoints(arrPoints):
-    retArra = [((arrPoints[i]), (arrPoints[i + 1]))
-         for i in range(len(arrPoints)-1)]
-    dim1 = len(retArra)
+    q = len(arrPoints)
+    retArra = [((arrPoints[i]), (arrPoints[(i + 1) % q]))
+         for i in range(q)]
     return retArra
