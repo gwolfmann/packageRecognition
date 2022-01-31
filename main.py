@@ -185,12 +185,15 @@ def blue_yellow_image(image):
 
 
 def get_corners(image):
+    img = cv2.imread(image)
+    if img is None:
+        print(image+" not found")
+        return
     resizeFactor = 0.5
     resBlue = blue_image(image)
     #cv2.imshow('Original_blue', resBlue)
     resYell = yellow_image(image)
     #cv2.imshow('Original_yellow', resYell)
-    img = cv2.imread(image)
     img = cv2.resize(img, (0, 0), None, resizeFactor, resizeFactor)
     basePoints, _ = utils.getBaseContours(resBlue, minArea=20000, showCanny=False)
 
@@ -207,7 +210,11 @@ def get_corners(image):
     boxPoints, contsBox = utils.getBoxContours(resYell, minArea=20000, showCanny=False, draw=True)
     resBoth = blue_yellow_image(imgWrp)
     completeImg = utils.mark_points(boxPoints, resBoth, len(boxPoints))
-    pairOfPoints = utils.pairPoints(boxPoints)
+
+    triPoints = utils.get3Points(boxPoints)
+
+
+    pairOfPoints = utils.pairPoints(triPoints) #boxPoints
 
     for pointsPair in pairOfPoints:
         point1 = pointsPair[0]
@@ -241,7 +248,7 @@ if __name__ == '__main__':
     #show_image()
     #originalSizing()
     #get_corners(image3)
-    trio = makeTriFiles('./images/toma', 11)
+    trio = makeTriFiles('./images/toma', 9)
     for f in trio:
         get_corners(f)
 

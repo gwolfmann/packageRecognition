@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import random as rng
 
+from main import hP
+
 rng.seed(12345)
 
 
@@ -10,10 +12,10 @@ def getBaseContours(img, cThr=[30, 10], showCanny=False, minArea=2000, draw=Fals
 
 
 def getBoxContours(img, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
-    return getImageContours(img, 6, cThr, showCanny, minArea, draw)
+    return getImageContours(img, 6, cThr, showCanny, minArea, draw, False)
 
 
-def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000, draw=False):
+def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000, draw=False, mustFilter=True):
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 1)
     imgCanny = cv2.Canny(imgBlur, cThr[0], cThr[1])
@@ -54,7 +56,8 @@ def getImageContours(img, qPoints, cThr=[30, 10], showCanny=False, minArea=2000,
     hull = cv2.convexHull(cont)
     # higlight points
 
-    hull = filterPoints(hull, qPoints)
+    if mustFilter:
+        hull = filterPoints(hull, qPoints)
 
     uni_hull = [hull]
     if draw:
@@ -86,6 +89,53 @@ def filterPoints(hullPoints, q):
         diffPoints = reorderPoints(myPoints, q)
         hullPoints = diffPoints.reshape(q, dim1, dim2)
     return hullPoints
+
+
+def getLowerPoint(hullPoints):
+    lowerPoint = hullPoints[0]
+    for p in hullPoints:
+        if p[0][1] > lowerPoint[0][1]:
+            lowerPoint = p
+    return lowerPoint
+
+
+def getLeftPoint(hullPoints, lowerPoint):
+    leftPoint = lowerPoint.copy()
+    leftPoint[0][1] = 0
+    leftPoint[0][0] = 0
+    for p in hullPoints:
+        if (not (p == lowerPoint).all()) \
+                and (p[0][1] < lowerPoint[0][1]) \
+                and (p[0][0] < lowerPoint[0][0]) \
+                and (p[0][1] > leftPoint[0][1]):
+            leftPoint = p
+    return leftPoint
+
+
+def getRightPoint(hullPoints, lowerPoint):
+    rightPoint = lowerPoint.copy()
+    rightPoint[0][1] = 0
+    rightPoint[0][0] = hP
+    for p in hullPoints:
+        if (not (p == lowerPoint).all()) \
+                and (p[0][1] < lowerPoint[0][1]) \
+                and (p[0][0] > lowerPoint[0][0]) \
+                and (p[0][1] > rightPoint[0][1]):
+            rightPoint = p
+
+    return rightPoint
+
+
+def get3Points(hullPoints):
+    points, dim1, dim2 = hullPoints.shape
+
+    myPoints = hullPoints.reshape((points, dim2))
+    lowerPoint = getLowerPoint(hullPoints)
+    leftPoint = getLeftPoint(hullPoints, lowerPoint)
+    rightPoint = getRightPoint(hullPoints, lowerPoint)
+    tp = np.array([leftPoint, lowerPoint, rightPoint])
+    tp = tp.reshape(3, dim1, dim2)
+    return tp
 
 
 def getContours(img, cThr=[30, 10], showCanny=False, minArea=2000, filter=0, draw=False):
@@ -214,5 +264,5 @@ def findDis(pts1, pts2):
 def pairPoints(arrPoints):
     q = len(arrPoints)
     retArra = [((arrPoints[i]), (arrPoints[(i + 1) % q]))
-         for i in range(q)]
+         for i in range(q-1)]
     return retArra
