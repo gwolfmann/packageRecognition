@@ -7,10 +7,10 @@ import utils
 
 ########
 web_cam = False
-image1 = './images/toma7_1.png' ##1200*901
-image2 = './images/toma7_2.png' ##1200*901
-image3 = './images/toma7_3.png' ##1200*901
-image3 = './images/toma12_2.jpg'
+image1 = './images/toma11_1.png' ##1200*901
+image2 = './images/toma11_2.png' ##1200*901
+image3 = './images/toma11_3.png' ##1200*901
+#image3 = './images/toma12_2.jpg'
 cap = cv2.VideoCapture(0)
 cap.set(10, 160)
 cap.set(3, 1920)
@@ -248,7 +248,7 @@ if __name__ == '__main__':
     #show_image()
     #originalSizing()
     #get_corners(image3)
-    trio = makeTriFiles('./images/toma', 9)
+    trio = makeTriFiles('./images/toma', 11)
     for f in trio:
         get_corners(f)
 
